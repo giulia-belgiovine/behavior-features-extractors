@@ -37,5 +37,4 @@ for folder in os.listdir(loadFramesFrom):
     out.release()
 
 
-
 out.release()
