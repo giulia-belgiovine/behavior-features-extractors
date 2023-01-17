@@ -55,6 +55,8 @@ for videoDirectory in os.listdir(loadVideosFrom):
                     if type(frame) is np.ndarray:
 
                         image, head_label, x, y, z = headPose.run(frame)
+
+
                         employee_writer.writerow([int(frameCount), player_label, [x, y, z], head_label])
                         cv2.putText(image, f'FPS: {int(frameCount)}', (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 0), 2)
 
