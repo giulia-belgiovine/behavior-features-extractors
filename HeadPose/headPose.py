@@ -15,10 +15,23 @@ mp_drawing = mp.solutions.drawing_utils
 
 class HeadPose:
 
-    def __init__(self, flag):
-        self.flag = flag
+    def __init__(self, method):
+        self.method = method
+        self.head_pose_detectors = {
+            "mediapipe": self.headpose_mediapipe, # TODO usare un enum
+            "open_face": self.headpose_openface,
+        }
+
+    def set_method(self, method):
+        self.method = method
 
     def run(self, frame):
+        return self.head_pose_detectors[self.method](frame)
+
+    def headpose_openface(self, frame):
+        return frame, _, _, _, _
+
+    def headpose_mediapipe(self, frame):
         #To improve performance
         frame.flags.writeable = False
         # Convert the color space from RGB to BGR
