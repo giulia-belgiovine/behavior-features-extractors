@@ -30,7 +30,7 @@ class AnalysisUtils:
     # todo: create dictionary to add target column
     def add_target_column(self, heading_dataframe, new_column_label, player):
 
-        # Create new NaN column for targets
+        # Create new column for targets
         heading_dataframe[new_column_label] = "unknown"
 
         if player == "blue":
@@ -60,20 +60,19 @@ class AnalysisUtils:
             mask = heading_dataframe[heading_dataframe.columns[3]].__eq__(key)
             heading_dataframe.loc[mask, new_column_label] = target_dict[key]
 
-
     def annotation_preprocessing(self, filename, header, frames_per_second):
         # Removes unnecessary columns and adds a first row with labels
         annotation_dataframe = pd.read_csv(filename, delimiter='\t', header=None)
         annotation_dataframe = annotation_dataframe.drop(columns=[0, 1, 2, 4])
         annotation_dataframe.columns = header
-    
+
         # Adds two columns with the frame number in which the annotation (i) started, (ii) stopped
         annotation_dataframe['start_frame'] = (annotation_dataframe.time_start * frames_per_second).astype(int)
         annotation_dataframe['stop_frame'] = (annotation_dataframe.time_stop * frames_per_second).astype(int)
 
         annotation_dataframe = annotation_dataframe.drop(columns="time_start")
         annotation_dataframe = annotation_dataframe.drop(columns="time_stop")
-    
+
         return annotation_dataframe
 
     def add_annotations(self, annotation_dict, final_dataframe, group_name):
@@ -102,3 +101,6 @@ class AnalysisUtils:
                         = phases_dataframe.loc[index, 'label']
                 else:
                     final_dataframe.loc[row.start_frame, 'phase'] = phases_dataframe.loc[index, 'label']
+
+        # Substitute the nan values with 'unknown' in phase column
+        final_dataframe['phase'].fillna('unknown', inplace=True)

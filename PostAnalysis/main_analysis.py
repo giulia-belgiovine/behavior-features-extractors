@@ -94,6 +94,8 @@ for file in all_files_head:
     # Fill the field Group in the dictionary with the data from the head_data dataframe
     head_data_dict[group_name][player] = head_data
 
+head_data_dict = dict(sorted(head_data_dict.items()))
+
 
 mean_ar_blue = []
 mean_val_blue = []
@@ -114,6 +116,6 @@ for key, val in emotions_data_dict.items():
             mean_ar_green.append(np.mean(arousal))
             mean_val_green.append(np.mean(valence))
 
-analysis_utils.draw_cross_plot(mean_val_green, mean_ar_green, 'g')
-analysis_utils.draw_cross_plot(mean_val_blue, mean_ar_blue, 'b')
-plt.show()
+# analysis_utils.draw_cross_plot(mean_val_green, mean_ar_green, 'g')
+# analysis_utils.draw_cross_plot(mean_val_blue, mean_ar_blue, 'b')
+# plt.show()
