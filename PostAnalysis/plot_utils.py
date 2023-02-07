@@ -134,3 +134,44 @@ def prepare_data_for_spiderplot(head_data_dict, labels, players, phases):
         data.append(data_tuple)
 
     return data
+
+
+def normalize_in_time(head_data_dict, players):
+    target_quantile_dict = {}
+    # Select data from annotation label "iCubStartsMoving" to "endGame". Delete the rest.
+    for key in head_data_dict:
+        target_quantile_dict[key] = {}
+        start_index = list(head_data_dict[key]['green']['phase']).index("IcubStartsMoving")
+        end_index = list(head_data_dict[key]['green']['phase']).index("EndGame")
+        for player in players:
+            target_quantile_dict[key][player] = {}
+            head_data_dict[key][player] = head_data_dict[key][player].loc[int(start_index):int(end_index)]
+            # Split data in 10% slices (10-quantiles)
+            quantiles = round(head_data_dict[key][player].quantile([0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1]))
+            target_dataframe = pd.DataFrame(columns={'human', 'robot', 'tablet', 'unknown'})
+
+            for start_index, end_index in zip(quantiles.values[:-1], quantiles.values[1:]):
+                target_count = head_data_dict[key][player]['target'].loc[int(start_index):int(end_index)].value_counts()
+
+                if 'human' in target_count:
+                    human_count = target_count['human']
+                else:
+                    human_count = 0
+                if 'robot' in target_count:
+                    robot_count = target_count['robot']
+                else:
+                    robot_count = 0
+                if 'tablet' in target_count:
+                    tablet_count = target_count['tablet']
+                else:
+                    tablet_count = 0
+                if 'unknown' in target_count:
+                    unknown_count = target_count['unknown']
+                else:
+                    unknown_count = 0
+
+                new_row = pd.DataFrame({'human': [human_count], 'robot': [robot_count],
+                                        'tablet': [tablet_count], 'unknown': [unknown_count]})
+                target_dataframe = pd.concat([target_dataframe, new_row])
+            target_quantile_dict[key][player] = target_dataframe
+    return target_quantile_dict

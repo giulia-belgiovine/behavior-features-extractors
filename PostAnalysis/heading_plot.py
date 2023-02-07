@@ -7,6 +7,26 @@ import plot_utils as pu
 
 
 if __name__ == '__main__':
+
+    quantile_target_dict = pu.normalize_in_time(main_analysis.head_data_dict, {'blue', 'green'})
+
+    plt.style.use('_mpl-gallery')
+    x = np.arange(1,11)
+    # size and color:
+    sizes = np.random.uniform(15, 80, len(x))
+    colors = np.random.uniform(15, 80, len(x))
+
+    # plot
+    fig, ax = plt.subplots()
+
+    ax.scatter(x, quantile_target_dict['Group01']['blue']['robot'], s=sizes, c=colors, vmin=0, vmax=100)
+
+    ax.set(xlim=(0, 8), xticks=np.arange(1, 8),
+           ylim=(0, 8), yticks=np.arange(1, 8))
+
+    plt.show()
+
+
     spoke_labels = ['human', 'robot', 'tablet', 'unknown']
     theta = pu.radar_factory(len(spoke_labels), frame='circle')
 
@@ -54,8 +74,7 @@ if __name__ == '__main__':
     plt.show()
 
     ### PLOT PLAYERS IN THEIR TURN ###
-    data = pu.prepare_data_for_spiderplot(main_analysis.head_data_dict, spoke_labels, ['blue', 'green'],
-                                                  ['BI', 'GI'])
+    data = pu.prepare_data_for_spiderplot(main_analysis.head_data_dict, spoke_labels, ['blue', 'green'], ['BI', 'GI'])
     # Remove label list from data
     data.pop(0)
 
