@@ -136,42 +136,112 @@ def prepare_data_for_spiderplot(head_data_dict, labels, players, phases):
     return data
 
 
-def normalize_in_time(head_data_dict, players):
-    target_quantile_dict = {}
-    # Select data from annotation label "iCubStartsMoving" to "endGame". Delete the rest.
-    for key in head_data_dict:
-        target_quantile_dict[key] = {}
-        start_index = list(head_data_dict[key]['green']['phase']).index("IcubStartsMoving")
-        end_index = list(head_data_dict[key]['green']['phase']).index("EndGame")
-        for player in players:
-            target_quantile_dict[key][player] = {}
-            head_data_dict[key][player] = head_data_dict[key][player].loc[int(start_index):int(end_index)]
-            # Split data in 10% slices (10-quantiles)
-            quantiles = round(head_data_dict[key][player].quantile([0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1]))
-            target_dataframe = pd.DataFrame(columns={'human', 'robot', 'tablet', 'unknown'})
+def heading_in_time(head_data_dict, players, percentile):
+    """Takes the heading data dictionary
+    and returns the mean percentage of target headed in each quantile for each player.
 
-            for start_index, end_index in zip(quantiles.values[:-1], quantiles.values[1:]):
-                target_count = head_data_dict[key][player]['target'].loc[int(start_index):int(end_index)].value_counts()
+        Parameters
+        ----------
+            head_data_dict : dict
+                structure: head_data_dict[group][player][dataframe]
+                contains raw data
+            players: list
+                list of players
+                example: ['blue', 'green']
+            percentile: int, between 1 and 100
+                dimension of the quantile.
+                For example if you want to split the time interval into 4 quantiles you insert percentile=25
+           """
+    target_quantile_dict = {}
+    x_labels = np.arange(0, 101, percentile)
+    x_ticks = np.arange(0, 100, percentile) + percentile / 2
+    # Select data from annotation label "iCubStartsMoving" to "endGame". Delete the rest.
+    for group in head_data_dict:
+        target_quantile_dict[group] = {}
+        start_index = list(head_data_dict[group]['green']['phase']).index("IcubStartsMoving")
+        end_index = list(head_data_dict[group]['green']['phase']).index("EndGame")
+        for player in players:
+            target_quantile_dict[group][player] = {}
+            head_data_dict[group][player] = head_data_dict[group][player].loc[int(start_index):int(end_index)]
+            # Split data in 10% slices (10-quantiles)
+            quantiles = round(head_data_dict[group][player].quantile(x_labels / 100))
+            target_dataframe = pd.DataFrame(columns={'human', 'robot', 'tablet', 'unknown'})
+            # Compute mean for every target in every quantile
+            for start_idx, end_idx, row_index in zip(quantiles.values[:-1], quantiles.values[1:], x_ticks):
+                target_count = head_data_dict[group][player]['target'].loc[int(start_idx):int(end_idx)].value_counts()
+                quantile_len = end_idx - start_idx
 
                 if 'human' in target_count:
-                    human_count = target_count['human']
+                    human_count = target_count['human'] / quantile_len
                 else:
                     human_count = 0
                 if 'robot' in target_count:
-                    robot_count = target_count['robot']
+                    robot_count = target_count['robot'] / quantile_len
                 else:
                     robot_count = 0
                 if 'tablet' in target_count:
-                    tablet_count = target_count['tablet']
+                    tablet_count = target_count['tablet'] / quantile_len
                 else:
                     tablet_count = 0
                 if 'unknown' in target_count:
-                    unknown_count = target_count['unknown']
+                    unknown_count = target_count['unknown'] / quantile_len
                 else:
                     unknown_count = 0
 
                 new_row = pd.DataFrame({'human': [human_count], 'robot': [robot_count],
-                                        'tablet': [tablet_count], 'unknown': [unknown_count]})
+                                        'tablet': [tablet_count], 'unknown': [unknown_count]}, index=[row_index])
                 target_dataframe = pd.concat([target_dataframe, new_row])
-            target_quantile_dict[key][player] = target_dataframe
-    return target_quantile_dict
+            target_quantile_dict[group][player] = target_dataframe
+    return target_quantile_dict, x_ticks, x_labels
+
+
+def heading_in_turns(head_data_dict, annotation_dict, players, players_annotation_label):
+    """Takes the heading data dictionary
+        and returns the mean percentage of target headed in each turn for each player.
+
+            Parameters
+            ----------
+                head_data_dict : dict
+                    structure: head_data_dict[group][player][dataframe]
+                    contains raw data
+                players: list
+                    list of players
+                    example: ['blue', 'green']
+               """
+    target_turn_dict = {}
+    for group in head_data_dict:
+        target_turn_dict[group] = {}
+        for player, label in zip(players, players_annotation_label):
+            # Compute number of rounds
+            # green from GS to (BS or RS or EndGame)
+            # blue from BS to (GS or RS or EndGame)
+            round_start_frames = annotation_dict[group]['start_frame'].loc[annotation_dict[group]['label'] == label]
+            round_end_frames = annotation_dict[group]['start_frame'].loc[round_start_frames.index + 1]
+            target_dataframe = pd.DataFrame(columns=['human', 'robot', 'tablet', 'unknown'])
+            idx = 1
+            for start, end in zip(round_start_frames, round_end_frames):
+                round_len = end - start
+                target_count = head_data_dict[group][player]['target'].loc[start:(end - 1)].value_counts()
+
+                if 'human' in target_count:
+                    human_count = target_count['human'] / round_len
+                else:
+                    human_count = 0
+                if 'robot' in target_count:
+                    robot_count = target_count['robot'] / round_len
+                else:
+                    robot_count = 0
+                if 'tablet' in target_count:
+                    tablet_count = target_count['tablet'] / round_len
+                else:
+                    tablet_count = 0
+                if 'unknown' in target_count:
+                    unknown_count = target_count['unknown'] / round_len
+                else:
+                    unknown_count = 0
+                new_row = pd.DataFrame({'human': [human_count], 'robot': [robot_count],
+                                        'tablet': [tablet_count], 'unknown': [unknown_count]}, index=[idx])
+                target_dataframe = pd.concat([target_dataframe, new_row])
+                idx += 1
+            target_turn_dict[group][player] = target_dataframe
+    return target_turn_dict
