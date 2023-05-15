@@ -23,11 +23,12 @@ class BodyPose:
         self.holistic = mp_holistic.Holistic(min_detection_confidence=0.5,
                                              min_tracking_confidence=0.5)
 
+
     def set_method(self, method):
         self.method = method
 
-    def run(self, frame):
-        return self.body_pose_detectors[self.method](frame)
+    def run(self, frame, debug_mode):
+        return self.body_pose_detectors[self.method](frame, debug_mode)
 
     def bodypose_holistic(self, image):
         # To improve performance
@@ -54,10 +55,7 @@ class BodyPose:
             landmark_drawing_spec=mp_drawing_styles
             .get_default_pose_landmarks_style())
 
-        # Flip the image horizontally for a selfie-view display.
-        #cv2.imshow('MediaPipe Holistic', cv2.flip(image, 1))
-
-
+            # cv2.imshow('MediaPipe Holistic', cv2.flip(image, 1))
 
         return image, results.pose_landmarks
 

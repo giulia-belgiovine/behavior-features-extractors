@@ -6,6 +6,7 @@ import os
 import time
 import csv
 from tqdm import tqdm
+import cv2
 
 from HeadPose.faceUtils import faceProcessing
 
@@ -17,7 +18,7 @@ class HeadPose:
     def __init__(self, method):
         self.method = method
         self.head_pose_detectors = {
-            "mediapipe": self.headpose_mediapipe, # TODO usare un enum
+            "mediapipe": self.headpose_mediapipe,
             "open_face": self.headpose_openface,
         }
 
@@ -25,7 +26,7 @@ class HeadPose:
         self.method = method
 
     def run(self, frame):
-        return self.head_pose_detectors[self.method](frame)
+        frame, text, x, y, z = self.head_pose_detectors[self.method](frame)
 
     def headpose_openface(self, frame):
         return frame, _, _, _, _
@@ -37,9 +38,7 @@ class HeadPose:
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Get the result
-        #results_face = faceProcessing.faceDetector.process(frame)     #if you want to use the mediapipe facedetector
-        results = faceProcessing.face_mesh.process(frame)           #if you want to use the mediapipe mesh face
-
+        results = faceProcessing.face_mesh.process(frame)
         # Draw the face detection annotations on the image.
         frame.flags.writeable = True
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
@@ -53,8 +52,6 @@ class HeadPose:
         text = ""
         x, y, z = -999, -999, -999
 
-        # if results_face.detections:
-        #     print('ok')
 
         if results.multi_face_landmarks:
             for face_landmarks in results.multi_face_landmarks:
@@ -95,6 +92,9 @@ class HeadPose:
                 # Display the nose direction
                 faceProcessing.display_output(frame, text, nose_2d, x, y, z)
                 # faceProcessing.draw_mesh(frame, face_landmarks)
+
+            # cv2.imshow('Final Image Head', image_head)
+            # cv2.putText(image_head, f'FPS: {int(frame_count)}', (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 0), 2)
 
         return frame, text, x, y, z
 
