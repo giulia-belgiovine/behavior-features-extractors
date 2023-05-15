@@ -11,16 +11,12 @@ from BodyPose.bodyPose import BodyPose
 from OpticalFlow.opticalFlow import OpticalFlow
 from VideoUtils.personDetector import detect_person
 
-# from mediapipe.python.solutions.drawing_utils import GREEN_COLOR, WHITE_COLOR
-# from mediapipe.python.solutions.drawing_styles import _THICKNESS_DOT
-#
-
-# root_dir = "/home/icub/Desktop/gioca_jouer"
 
 class BehavioralPipeline:
-    def __init__(self):
+    def __init__(self, r, v):
 
-        self.root_dir = args.root_dir
+        self.root_dir = r
+        self.video_format = v
         self.source_dir = os.path.join(self.root_dir, 'input_videos')  # Folder where the videos to process are
         self.out_dir = os.path.join(self.root_dir, 'behavioral_analysis_output')  # Folder that will hold the output folders
 
@@ -45,7 +41,6 @@ class BehavioralPipeline:
         self.height = 0
         self.fps = 30
 
-
     def extract_head_pose(self, method):
         self.head_pose_extractor = HeadPose(method)
 
@@ -62,9 +57,9 @@ class BehavioralPipeline:
 
         for video in os.listdir(self.source_dir):
 
-            if video.endswith(video_format):
+            if video.endswith(self.video_format):
 
-                video_time = time.time()
+                self.video_time = time.time()
 
                 ########## OPEN VIDEO ##########
                 cap = cv2.VideoCapture(self.source_dir + "/" + video)
@@ -87,9 +82,7 @@ class BehavioralPipeline:
                 joints_to_save = None
                 sum_magnitude_frame = None
 
-
                 print("Started Video:" + str(video) + " - Total Frames:" + str(total_frames))
-
 
                 ########## HEAD ##########
                 if self.head_analysis:
@@ -112,12 +105,13 @@ class BehavioralPipeline:
                     writer_employee.writerow(["Frame", "Head_Angles", "Face_Heading_Label", "Joints_Position", "Optical_Flow_Magnitude"])
 
                     # Save output video
-                    # result_video_head = cv2.VideoWriter(self.head_output_path + "/" + video[:-4] + '.avi', cv2.VideoWriter_fourcc(*'MJPG'),
-                    #                                     self.fps, final_image_size)
-                    # result_video_body = cv2.VideoWriter(self.body_output_path + "/" + video[:-4] + '.avi', cv2.VideoWriter_fourcc(*'MJPG'),
-                    #                                     self.fps, final_image_size)
-                    # result_video_flow = cv2.VideoWriter(self.flow_output_path + "/" + video[:-4] + '.avi', cv2.VideoWriter_fourcc(*'MJPG'),
-                    #                                     self.fps, final_image_size)
+                    result_video_head = cv2.VideoWriter(self.head_output_path + "/" + video[:-4] + '.avi', cv2.VideoWriter_fourcc(*'MJPG'),
+                                                        self.fps, final_image_size)
+                    result_video_body = cv2.VideoWriter(self.body_output_path + "/" + video[:-4] + '.avi', cv2.VideoWriter_fourcc(*'MJPG'),
+                                                        self.fps, final_image_size)
+                    result_video_flow = cv2.VideoWriter(self.flow_output_path + "/" + video[:-4] + '.avi', cv2.VideoWriter_fourcc(*'MJPG'),
+                                                        self.fps, final_image_size)
+
 
                     ########## PROCESS VIDEOS ###########
                     with tqdm(total=total_frames) as pbar:
@@ -128,13 +122,11 @@ class BehavioralPipeline:
                             frame_count = frame_count + 1
                             if type(frame) is np.ndarray:
 
-                                # Detect person in the frame and run the analysis on single individuals
+                                # Detect person in the frame
                                 if self.detect_single_individual:
                                     person_boxes = detect_person(frame, draw_boxes=True)
                                     for (xA, yA, xB, yB) in person_boxes:
                                         person_frame = frame[yA:yB, xA:xB]
-
-                                    # cv2.imshow("single_person", frame)
 
 
                                 if self.optical_flow_analysis and self.optical_flow_extractor is not None:
@@ -151,8 +143,8 @@ class BehavioralPipeline:
                                     cv2.imshow('Final Image Head', image_head)
 
 
-                                # if self.emotion_analysis and self.emotion_extractor is not None:
-                                #     ret_val = self.emotion_extractor.run(frame)
+                                if self.emotion_analysis and self.emotion_extractor is not None:
+                                    ret_val = self.emotion_extractor.run(frame)
 
 
                                 if self.body_analysis and self.body_pose_extractor is not None:
@@ -167,9 +159,9 @@ class BehavioralPipeline:
                                     break
 
                                 # save videos
-                                # result_video_head.write(image_head)
-                                # result_video_body.write(image_body)
-                                # result_video_flow.write(image_flow)
+                                result_video_head.write(image_head)
+                                result_video_body.write(image_body)
+                                result_video_flow.write(image_flow)
 
                             pbar.update(1)
 
@@ -185,23 +177,17 @@ class BehavioralPipeline:
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("root_dir", "--root_dir", help="Name of the path where input_videos folder is", default="/home/icub/Desktop/gioca_jouer", type=str)
-    parser.add_argument("video_format", "--video_format", help="format of the videos to be processed", default='.mp4',
-                        type=str)
+    parser.add_argument("-r", "--root_dir", help="Name of the path where input_videos folder is", default='home/icub/Desktop/gioca_jouer', type=str)
+    parser.add_argument("-v", "--video_format", help="Format of the videos to be processed", default='.mp4', type=str)
     args = parser.parse_args()
 
+    bp = BehavioralPipeline(args.root_dir, args.video_format)
+    bp.extract_head_pose("mediapipe")
+    bp.extract_optical_flow("dense_franeback")
+    bp.extract_emotion("default")
+    bp.extract_body_pose("mediapipe")
 
-    pipeline = BehavioralPipeline()
-    pipeline.extract_head_pose("mediapipe")
-    pipeline.extract_optical_flow("dense_franeback")
-    pipeline.extract_emotion("default")
-    pipeline.extract_body_pose("mediapipe")
-
-    pipeline.ingest_videos()
-
-
-
-
+    bp.ingest_videos()
 
 
 if __name__ == '__main__':
