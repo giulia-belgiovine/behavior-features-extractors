@@ -9,10 +9,12 @@ class faceProcessing:
 
   def __init__(self):
 
-    # self.mp_face_detection = mp.solutions.face_detection
-    # self.faceDetector = self.mp_face_detection.FaceDetection(model_selection=0,min_detection_confidence=0.5)
+    self.faceDetector = mp.solutions.face_detection.FaceDetection(model_selection="full",
+                                                                  min_detection_confidence=0.01)
     self.mp_face_mesh = mp.solutions.face_mesh
-    self.face_mesh = self.mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5)
+    self.face_mesh = self.mp_face_mesh.FaceMesh(min_detection_confidence=0.5,
+                                                min_tracking_confidence=0.5,
+                                                max_num_faces=4)
 
     self.mp_drawing = mp.solutions.drawing_utils
     self.drawing_spec = self.mp_drawing.DrawingSpec(thickness=1, circle_radius=1)

@@ -1,5 +1,4 @@
 #source code a: https://github.com/niconielsen32/ComputerVision/blob/master/headPoseEstimation.py
-
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -38,7 +37,7 @@ class HeadPose:
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Get the result
-        # results = imageProcessing.faceDetector.process(frame)     #if you want to use the mediapipe facedetector
+        #results_face = faceProcessing.faceDetector.process(frame)     #if you want to use the mediapipe facedetector
         results = faceProcessing.face_mesh.process(frame)           #if you want to use the mediapipe mesh face
 
         # Draw the face detection annotations on the image.
@@ -54,7 +53,9 @@ class HeadPose:
         text = ""
         x, y, z = -999, -999, -999
 
-        # if results.detections:
+        # if results_face.detections:
+        #     print('ok')
+
         if results.multi_face_landmarks:
             for face_landmarks in results.multi_face_landmarks:
                 for idx, lm in enumerate(face_landmarks.landmark):

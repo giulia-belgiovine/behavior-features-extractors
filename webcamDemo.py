@@ -3,7 +3,7 @@ import mediapipe as mp
 import numpy as np
 from mediapipe.python.solutions.drawing_utils import GREEN_COLOR, WHITE_COLOR
 from mediapipe.python.solutions.drawing_styles import _THICKNESS_DOT
-from HeadPose.FaceUtils import faceProcessing
+from HeadPose.faceUtils import faceProcessing
 
 # For webcam input:
 cap = cv2.VideoCapture(0)

@@ -6,8 +6,8 @@ from io import BytesIO
 import numpy as np
 
 
-loadFramesFrom = "/home/icub/Desktop/social_exclusion/cropped_videos"
-saveVideosin = "/home/icub/Desktop/social_exclusion/output_emotion"
+loadFramesFrom = "/home/icub/Desktop/prova"
+saveVideosin = "/home/icub/Desktop/output/"
 size=(640,480)
 
 

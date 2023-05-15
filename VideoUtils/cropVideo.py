@@ -3,11 +3,11 @@ import cv2
 import os
 
 # Open the video
-video_path = "/home/icub/Desktop/social_exclusion/source_video"
-video_path_cropped = "/home/icub/Desktop/social_exclusion/cropped_videos"
-video_name = [f for f in os.listdir(video_path) if f.endswith(".mp4")][0]
+video_path = "/home/icub/Desktop/output/"
+video_path_cropped = "/home/icub/Desktop/prova"
+video_name = [f for f in os.listdir(video_path) if f.endswith(".avi")][0]
 video = os.path.join(video_path, video_name)
-cropped_video = os.path.join(video_path_cropped, video_name.split('.')[0] + "_cropped_green.avi")
+cropped_video = os.path.join(video_path_cropped, video_name.split('.')[0] + "_cropped.avi")
 
 cap = cv2.VideoCapture(video)
 
@@ -18,9 +18,9 @@ cnt = 0
 w_frame, h_frame = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fps, frames = cap.get(cv2.CAP_PROP_FPS), cap.get(cv2.CAP_PROP_FRAME_COUNT)
 
-# Here you can define your croping values
-x,y,h,w = 1100,250,400,500  #1100,250,400,500  #
-finalImageSize = (500,400) #(1100, 780)
+# Here you can define your cropping values
+x,y,h,w = 10,25,455,350  #1100,250,400,500  #
+finalImageSize = (w, h) #(1100, 780)
 
 # output
 fourcc = cv2.VideoWriter_fourcc(*'MJPG')
