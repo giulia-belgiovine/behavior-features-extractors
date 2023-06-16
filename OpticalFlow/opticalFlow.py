@@ -19,9 +19,9 @@ class OpticalFlow:
         self.method = method
 
     def run(self, frame, prev_gray, mask):
-        return self.optical_flow_detectors[self.method](frame, prev_gray, mask, debug_mode)
+        return self.optical_flow_detectors[self.method](frame, prev_gray, mask)
 
-    def optical_flow_dense(self, frame, prev_gray, mask, debug_mode):
+    def optical_flow_dense(self, frame, prev_gray, mask):
         # Converts frame to grayscale
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         # Calculates dense optical flow by Farneback method
